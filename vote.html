@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام التصويت الإلكتروني</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* إضافات خاصة */
+        .step { display: none; }
+        .step.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .candidate-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 10px 0;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        .candidate-card.selected {
+            background: #e3f2fd;
+            border-color: #2196F3;
+        }
+        .candidate-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            display: none;
+        }
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            display: block;
+        }
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            display: block;
+        }
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- الخطوة 1: إدخال الهوية -->
+        <div id="step1" class="step active">
+            <div class="header">
+                <h1><i class="fas fa-vote-yea"></i> نظام التصويت الإلكتروني</h1>
+                <p>الديمقراطية الافتراضية - انتخابات 2024</p>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-id-card"></i> التحقق من الهوية</h2>
+                <p>أدخل رقم الهوية الوطنية للتحقق والتأهل للتصويت</p>
+                
+                <div class="form-group">
+                    <label for="nationalId">رقم الهوية الوطنية:</label>
+                    <input type="text" id="nationalId" placeholder="أدخل رقم الهوية" maxlength="10" autocomplete="off">
+                </div>
+                
+                <button class="btn btn-primary" onclick="verifyVoter()">
+                    <i class="fas fa-check"></i> تحقق من الهوية
+                </button>
+                
+                <div id="verifyMessage" class="message"></div>
+                
+                <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+                    <p><strong>الهويات التجريبية للاختبار:</strong></p>
+                    <p>• 1234567890 (أحمد محمد)</p>
+                    <p>• 0987654321 (سارة علي)</p>
+                    <p>• 1111111111 (محمد خالد)</p>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p>نظام التصويت الإلكتروني - جميع الحقوق محفوظة © 2024</p>
+            </div>
+        </div>
+        
+        <!-- الخطوة 2: اختيار المرشح -->
+        <div id="step2" class="step">
+            <div class="header">
+                <h1><i class="fas fa-users"></i> اختيار المرشح</h1>
+                <p>مرحباً <span id="voterName"></span></p>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-star"></i> قائمة المرشحين</h2>
+                <p>يرجى اختيار أحد المرشحين التاليين:</p>
+                
+                <div id="candidatesList" class="candidates-grid">
+                    <!-- سيتم ملؤها بالجافاسكريبت -->
+                </div>
+                
+                <div class="navigation">
+                    <button class="btn btn-secondary" onclick="goToStep(1)">
+                        <i class="fas fa-arrow-right"></i> رجوع
+                    </button>
+                </div>
+                
+                <div id="candidatesMessage" class="message"></div>
+            </div>
+        </div>
+        
+        <!-- الخطوة 3: تأكيد التصويت -->
+        <div id="step3" class="step">
+            <div class="header">
+                <h1><i class="fas fa-check-circle"></i> تأكيد التصويت</h1>
+            </div>
+            
+            <div class="card">
+                <h2><i class="fas fa-shield-alt"></i> تأكيد الاختيار</h2>
+                
+                <div class="confirmation-card">
+                    <h3>هل أنت متأكد من اختيارك؟</h3>
+                    <p>لقد اخترت المرشح:</p>
+                    <div id="selectedCandidateInfo" class="candidate-info"></div>
+                    
+                    <div class="warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>تنبيه هام:</strong> لا يمكن التراجع عن التصويت بعد التأكيد
+                    </div>
+                    
+                    <div class="confirmation-buttons">
+                        <button class="btn btn-success" onclick="submitVote()">
+                            <i class="fas fa-check"></i> نعم، أكد التصويت
+                        </button>
+                        <button class="btn btn-secondary" onclick="goToStep(2)">
+                            <i class="fas fa-times"></i> لا، عد للخلف
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="confirmMessage" class="message"></div>
+            </div>
+        </div>
+        
+        <!-- الخطوة 4: نجاح التصويت -->
+        <div id="step4" class="step">
+            <div class="header">
+                <h1><i class="fas fa-check-circle"></i> تم التصويت بنجاح!</h1>
+            </div>
+            
+            <div class="card success-card">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h2>شكراً لمشاركتك</h2>
+                <p>لقد سجلت صوتك بنجاح في الانتخابات الإلكترونية</p>
+                <p>رقم العملية: <strong><span id="voteId"></span></strong></p>
+                
+                <div class="success-info">
+                    <p><i class="fas fa-user"></i> الناخب: <span id="finalVoterName"></span></p>
+                    <p><i class="fas fa-id-card"></i> رقم الهوية: <span id="finalNationalId"></span></p>
+                    <p><i class="fas fa-clock"></i> وقت التصويت: <span id="voteTime"></span></p>
+                    <p><i class="fas fa-user-tie"></i> المرشح المختار: <span id="finalCandidate"></span></p>
+                </div>
+                
+                <button class="btn btn-primary" onclick="goToStep(1)">
+                    <i class="fas fa-redo"></i> العودة للصفحة الرئيسية
+                </button>
+            </div>
+            
+            <div class="footer">
+                <p>شكراً لدعمكم الديمقراطية الافتراضية</p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="vote.js"></script>
+    <script>
+        // كود بسيط للاختبار
+        function showStep(stepNumber) {
+            // إخفاء جميع الخطوات
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active');
+            });
+            
+            // إظهار الخطوة المطلوبة
+            document.getElementById('step' + stepNumber).classList.add('active');
+        }
+        
+        // للاختبار السريع: الانتقال بين الخطوات
+        function testVerify() {
+            const id = document.getElementById('nationalId').value;
+            if (id === '1234567890' || id === '0987654321' || id === '1111111111') {
+                document.getElementById('voterName').textContent = 'أحمد محمد';
+                showStep(2);
+                // تحميل مرشحين تجريبيين
+                document.getElementById('candidatesList').innerHTML = `
+                    <div class="candidate-card">
+                        <h3>مرشح ١</h3>
+                        <p>المرشح الأول</p>
+                        <button class="btn btn-primary" onclick="testSelect('مرشح ١')">اختر</button>
+                    </div>
+                    <div class="candidate-card">
+                        <h3>مرشح ٢</h3>
+                        <p>المرشح الثاني</p>
+                        <button class="btn btn-primary" onclick="testSelect('مرشح ٢')">اختر</button>
+                    </div>
+                `;
+            } else {
+                alert('رقم الهوية غير صحيح. جرب: 1234567890');
+            }
+        }
+        
+        function testSelect(candidateName) {
+            document.getElementById('selectedCandidateInfo').innerHTML = `<h3>${candidateName}</h3>`;
+            showStep(3);
+        }
+        
+        function testVote() {
+            showStep(4);
+            document.getElementById('finalVoterName').textContent = 'أحمد محمد';
+            document.getElementById('finalNationalId').textContent = document.getElementById('nationalId').value;
+            document.getElementById('voteId').textContent = 'VOTE-' + Date.now().toString().slice(-6);
+            document.getElementById('voteTime').textContent = new Date().toLocaleString('ar-SA');
+            document.getElementById('finalCandidate').textContent = 'مرشح ١';
+        }
+    </script>
+</body>
+</html>

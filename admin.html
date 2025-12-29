@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة إدارة التصويت</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .dashboard { display: none; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin: 20px 0; }
+        .stat-card { background: #fff; padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+        .stat-card h3 { color: #666; font-size: 0.9rem; margin-bottom: 10px; }
+        .stat-card .number { font-size: 2rem; font-weight: bold; color: #2c3e50; }
+        .table-container { overflow-x: auto; margin: 20px 0; }
+        table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: right; border-bottom: 1px solid #ddd; }
+        th { background: #f8f9fa; font-weight: 600; color: #333; }
+        .tabs { display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
+        .tab { padding: 12px 20px; background: #f8f9fa; border: none; border-radius: 8px; cursor: pointer; }
+        .tab.active { background: #3498db; color: white; }
+        .form-row { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 15px; }
+        .btn-warning { background: #ffc107; color: #000; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        @media (min-width: 768px) {
+            .form-row { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="loginSection" class="card">
+            <div class="header">
+                <h1><i class="fas fa-lock"></i> دخول المدير</h1>
+                <p>لوحة التحكم لنظام التصويت</p>
+            </div>
+            
+            <div class="form-group">
+                <label>اسم المستخدم:</label>
+                <input type="text" id="username" value="admin">
+            </div>
+            
+            <div class="form-group">
+                <label>كلمة المرور:</label>
+                <input type="password" id="password" value="admin123">
+            </div>
+            
+            <button class="btn btn-primary" onclick="login()">
+                <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+            </button>
+            
+            <div id="loginMessage" class="message"></div>
+        </div>
+        
+        <div id="dashboard" class="dashboard">
+            <div class="header">
+                <h1><i class="fas fa-tachometer-alt"></i> لوحة التحكم</h1>
+                <button class="btn btn-secondary" onclick="logout()" style="width: auto; padding: 10px 20px;">
+                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                </button>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>إجمالي الناخبين</h3>
+                    <div class="number" id="totalVoters">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>المصوتين</h3>
+                    <div class="number" id="voted">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>المرشحين</h3>
+                    <div class="number" id="totalCandidates">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>إجمالي الأصوات</h3>
+                    <div class="number" id="totalVotes">0</div>
+                </div>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('voters')">
+                    <i class="fas fa-users"></i> إدارة الناخبين
+                </button>
+                <button class="tab" onclick="showTab('candidates')">
+                    <i class="fas fa-user-tie"></i> إدارة المرشحين
+                </button>
+                <button class="tab" onclick="showTab('addVoter')">
+                    <i class="fas fa-user-plus"></i> إضافة ناخب
+                </button>
+                <button class="tab" onclick="showTab('addCandidate')">
+                    <i class="fas fa-plus-circle"></i> إضافة مرشح
+                </button>
+                <button class="tab" onclick="showTab('results')">
+                    <i class="fas fa-chart-bar"></i> النتائج
+                </button>
+            </div>
+            
+            <!-- تبويب الناخبين -->
+            <div id="votersTab" class="tab-content active">
+                <h2><i class="fas fa-users"></i> قائمة الناخبين المسجلين</h2>
+                <div class="table-container">
+                    <table id="votersTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>رقم الهوية</th>
+                                <th>الاسم الكامل</th>
+                                <th>البريد الإلكتروني</th>
+                                <th>الهاتف</th>
+                                <th>الحالة</th>
+                                <th>التاريخ</th>
+                                <th>الإجراءات</th>
+                                <th>التعديل</th>
+                            </tr>
+                        </thead>
+                        <tbody id="votersList">
+                            <!-- سيتم ملؤها بالجافاسكريبت -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- تبويب المرشحين -->
+            <div id="candidatesTab" class="tab-content">
+                <h2><i class="fas fa-user-tie"></i> قائمة المرشحين</h2>
+                <div class="table-container">
+                    <table id="candidatesTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>الاسم</th>
+                                <th>الوصف</th>
+                                <th>الحزب</th>
+                                <th>عدد الأصوات</th>
+                                <th>التاريخ</th>
+                                <th>الإجراءات</th>
+                                <th>التعديل</th>
+                            </tr>
+                        </thead>
+                        <tbody id="candidatesList">
+                            <!-- سيتم ملؤها بالجافاسكريبت -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- تبويب إضافة ناخب -->
+            <div id="addVoterTab" class="tab-content">
+                <h2><i class="fas fa-user-plus"></i> إضافة ناخب جديد</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>رقم الهوية الوطنية *</label>
+                        <input type="text" id="newNationalId" placeholder="رقم الهوية">
+                    </div>
+                    <div class="form-group">
+                        <label>الاسم الكامل *</label>
+                        <input type="text" id="newFullName" placeholder="الاسم الثلاثي">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>رقم الهاتف</label>
+                        <input type="text" id="newPhone" placeholder="05xxxxxxxx">
+                    </div>
+                    <div class="form-group">
+                        <label>البريد الإلكتروني</label>
+                        <input type="email" id="newEmail" placeholder="example@email.com">
+                    </div>
+                </div>
+                <button class="btn btn-success" onclick="addVoter()">
+                    <i class="fas fa-save"></i> حفظ الناخب
+                </button>
+                <div id="addVoterMessage" class="message"></div>
+            </div>
+            
+            <!-- تبويب إضافة مرشح -->
+            <div id="addCandidateTab" class="tab-content">
+                <h2><i class="fas fa-user-tie"></i> إضافة مرشح جديد</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>اسم المرشح *</label>
+                        <input type="text" id="candidateName" placeholder="اسم المرشح">
+                    </div>
+                    <div class="form-group">
+                        <label>الحزب / القائمة</label>
+                        <input type="text" id="candidateParty" placeholder="اسم الحزب">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>الوصف / السيرة الذاتية</label>
+                    <textarea id="candidateDescription" rows="3" placeholder="وصف مختصر للمرشح"></textarea>
+                </div>
+                <button class="btn btn-success" onclick="addCandidate()">
+                    <i class="fas fa-save"></i> حفظ المرشح
+                </button>
+                <div id="addCandidateMessage" class="message"></div>
+            </div>
+            
+            <!-- تبويب النتائج -->
+            <div id="resultsTab" class="tab-content">
+                <h2><i class="fas fa-chart-bar"></i> نتائج التصويت</h2>
+                <div id="resultsContainer" style="margin: 20px 0;">
+                    <!-- سيتم ملؤها بالجافاسكريبت -->
+                </div>
+                <button class="btn btn-primary" onclick="loadResults()">
+                    <i class="fas fa-sync-alt"></i> تحديث النتائج
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="admin.js"></script>
+</body>
+</html>
